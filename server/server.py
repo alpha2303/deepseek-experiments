@@ -1,10 +1,12 @@
 import gc
-from pathlib import Path
+import json
 from typing import List
 import torch
 from vllm import LLM, RequestOutput, SamplingParams
 from fastapi import FastAPI
 from pydantic import BaseModel
+
+HF_DEEPSEEK_REPONAME = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
 
 
 class LLMService:
@@ -15,14 +17,15 @@ class LLMService:
     def __init__(
         self,
         llm_engine: LLM = LLM(
-            model=str(Path("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B")),
+            model=HF_DEEPSEEK_REPONAME,
             trust_remote_code=True,
             gpu_memory_utilization=0.96,
-            max_seq_len_to_capture=1024,
             enforce_eager=True,
-            max_model_len=2048,
+            max_model_len=8196,
         ),
-        params: SamplingParams = SamplingParams(temperature=0.5, top_p=0.95),
+        params: SamplingParams = SamplingParams(
+            temperature=0.5, top_p=0.95, max_tokens=2048
+        ),
     ) -> None:
         self.llm_engine = llm_engine
         self.params = params
@@ -32,13 +35,16 @@ class LLMService:
         return outputs[0].outputs[0].text
 
     def generate_chat_response(self, prompt) -> str:
-        self.conversation.append([{"role": "user", "content": prompt}])
+        self.conversation.append({"role": "user", "content": prompt})
         outputs = self.llm_engine.chat(self.conversation, self.params, use_tqdm=False)
 
         chat_output = extract_output(outputs)
-        self.conversation.append([{"role": "assistant", "content": chat_output}])
+        self.conversation.append({"role": "assistant", "content": chat_output})
 
         return chat_output
+
+    def chat_history(self) -> List[dict[str, str]]:
+        return self.conversation
 
 
 llm: LLMService = None
@@ -68,7 +74,17 @@ async def llm_generate_text(prompt_query: PromptQuery):
 @app.post("/chat", response_model=dict)
 async def llm_generate_chat(prompt_query: PromptQuery):
     prompt = prompt_query.prompt.strip()
-    return {"message": llm.generate_chat_response(prompt=prompt)}
+    message = ""
+    if prompt == "history":
+        message = json.dumps(llm.chat_history())
+    else:
+        message = llm.generate_chat_response(prompt=prompt)
+    return {"message": message}
+
+
+@app.get("/history", response_model=List[dict[str, str]])
+async def llm_history():
+    return llm.chat_history()
 
 
 def extract_output(outputs: List[RequestOutput]) -> str:
