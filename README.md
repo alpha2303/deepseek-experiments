@@ -39,14 +39,5 @@ This will start the LLM server with port forwarding at Port 3000, which can be a
 2. Once the server is up and running, open a terminal in the root folder and run `uv run ./client/client.py` to start the chat client.
 3. To stop the chat client, enter `bye` into the `Enter Prompt:` input prompt .
 
-## Challenges Navigated
-
-1. Core dependencies of vLLM are Linux-oriented, which caused issues since local system runs on Windows. Opted to set up a Docker build instead.
-2. Default LLM engine parameters of vLLM used in the configurations for loading the model, primarily `max_model_length`, far exceeded the 6GB VRAM capacity of local GPU. Configured multiple reduced parameters to bring model to executable status. Additional research will be required to optimize for better results.
-3. From current observations, vLLM could only work with models downloaded to `${HOME}/.cache/huggingface/<model-name>` using `huggingface_hub` module or `huggingface-cli`.
-   - HF tokens are not required for access as model is public.
-   - `huggingface-cli` is currently used to fetch model during Docker build, which increases build time in initial build. Later builds have cached layers, thus reducing the need for re-downloads. Optimizations will need to be looked into to improve initial build time.
-
-## Pending Issues
-
-[ ] Fix issue with model generating same repetitive outputs for different prompts.
+## Challenge Log
+All challenges encountered during this development journey, both pending and accomplished, will be logged in the [Challenge Log](./CHALLENGES.md) for future reference.
