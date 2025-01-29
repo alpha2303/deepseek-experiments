@@ -18,7 +18,7 @@ def send_message(prompt: str) -> str:
 
 
 def get_history() -> List[dict[str, str]]:
-    res: requests.Response = requests.post("http://localhost:3000/history/")
+    res: requests.Response = requests.get("http://localhost:3000/history/")
     history = []
     try:
         history = res.json()
