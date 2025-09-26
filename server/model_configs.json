@@ -1,0 +1,14 @@
+{
+    "models": {
+        "DeepSeek-R1-Distill-Qwen-1.5B": {
+            "repo_name": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+            "gpu_memory_utilization": 0.96,
+            "max_model_len": 4096,
+            "sampling_params": {
+                "temperature": 0.5,
+                "top_p": 0.95,
+                "max_tokens": 2048
+            }
+        }
+    }
+}
